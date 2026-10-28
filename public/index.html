@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Inventory Restock System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 0 15px;
+      background: #f2f2f2;
+    }
+    h1 {
+      text-align: center;
+    }
+    .box {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .box h3 {
+      margin-top: 0;
+    }
+    input {
+      padding: 6px;
+      margin: 3px;
+    }
+    button {
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #e6e6e6;
+    }
+    #message {
+      font-weight: bold;
+      min-height: 20px;
+    }
+    .AVAILABLE { color: green; font-weight: bold; }
+    .LOW { color: orange; font-weight: bold; }
+    .OUT { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Inventory Restock System</h1>
+
+  <div class="box">
+    <h3>Add Product</h3>
+    <input type="text" id="product_name" placeholder="Product name">
+    <input type="text" id="category" placeholder="Category">
+    <input type="number" id="price" placeholder="Price">
+    <input type="number" id="stock" placeholder="Stock">
+    <button onclick="addProduct()">Add</button>
+  </div>
+
+  <div class="box">
+    <h3>Search by ID</h3>
+    <input type="number" id="search_id" placeholder="Product ID">
+    <button onclick="searchProduct()">Search</button>
+    <button onclick="loadProducts()">Show All</button>
+  </div>
+
+  <p id="message"></p>
+
+  <div class="box">
+    <h3>Products</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Product Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API = "/api/products";
+
+    // pick a css class based on the stock status text
+    function statusClass(status) {
+      if (status === "OUT OF STOCK") return "OUT";
+      if (status === "LOW STOCK") return "LOW";
+      return "AVAILABLE";
+    }
+
+    // build the table rows from an array of products
+    function show(products) {
+      let rows = "";
+      for (const p of products) {
+        rows += "<tr>" +
+          "<td>" + p.id + "</td>" +
+          "<td>" + p.product_name + "</td>" +
+          "<td>" + p.category + "</td>" +
+          "<td>" + p.price + "</td>" +
+          "<td>" + p.stock + "</td>" +
+          "<td class='" + statusClass(p.stock_status) + "'>" + p.stock_status + "</td>" +
+          "<td><button onclick='deleteProduct(" + p.id + ")'>Delete</button></td>" +
+          "</tr>";
+      }
+      document.getElementById("list").innerHTML = rows;
+    }
+
+    // GET all products
+    async function loadProducts() {
+      const res = await fetch(API);
+      const data = await res.json();
+      show(data);
+      document.getElementById("message").textContent = "";
+    }
+
+    // GET one product by id
+    async function searchProduct() {
+      const id = document.getElementById("search_id").value;
+      const res = await fetch(API + "/" + id);
+      const data = await res.json();
+      if (res.ok) {
+        show([data]);
+        document.getElementById("message").textContent = "";
+      } else {
+        show([]);
+        document.getElementById("message").textContent = data.error;
+      }
+    }
+
+    // POST a new product
+    async function addProduct() {
+      const product = {
+        product_name: document.getElementById("product_name").value,
+        category: document.getElementById("category").value,
+        price: Number(document.getElementById("price").value),
+        stock: Number(document.getElementById("stock").value)
+      };
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        loadProducts();
+        document.getElementById("message").textContent = "Product added";
+      } else {
+        document.getElementById("message").textContent = data.error;
+      }
+    }
+
+    // DELETE a product by id
+    async function deleteProduct(id) {
+      const res = await fetch(API + "/" + id, { method: "DELETE" });
+      const data = await res.json();
+      await loadProducts();
+      document.getElementById("message").textContent = data.message || data.error;
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>

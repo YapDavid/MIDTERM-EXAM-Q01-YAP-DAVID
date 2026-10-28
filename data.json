@@ -1,0 +1,23 @@
+[
+  {
+    "id": 2,
+    "product_name": "USB-C Cable",
+    "category": "Accessories",
+    "price": 199.5,
+    "stock": 4
+  },
+  {
+    "id": 3,
+    "product_name": "Mechanical Keyboard",
+    "category": "Electronics",
+    "price": 2499,
+    "stock": 0
+  },
+  {
+    "id": 4,
+    "product_name": "Monitor ",
+    "category": "Accessories",
+    "price": 300,
+    "stock": 12
+  }
+]
